@@ -9,11 +9,14 @@ export default function ViewPage() {
   const [cur, setCur] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
+  // --- 追加：詳細表示用のステート ---
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [dayDetails, setDayDetails] = useState<any[]>([]);
+
   const Y = cur.getFullYear();
   const M = cur.getMonth();
   const days = ["日", "月", "火", "水", "木", "金", "土"];
 
-  // 確定（approved）シフトだけを取得
   const fetchApprovedShifts = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -33,7 +36,6 @@ export default function ViewPage() {
     fetchApprovedShifts();
   }, [cur]);
 
-  // スタッフごとの色設定（以前使っていた色味を再現）
   const getStaffColor = (name: string) => {
     const colors: any = {
       "池田 和也": { bg: '#e6f4ff', text: '#0958d9' },
@@ -46,7 +48,6 @@ export default function ViewPage() {
     return colors[name] || { bg: '#f5f5f5', text: '#595959' };
   };
 
-  // カレンダー計算
   const first = new Date(Y, M, 1).getDay();
   const last = new Date(Y, M + 1, 0).getDate();
   const dates = [];
@@ -54,6 +55,13 @@ export default function ViewPage() {
   for (let d = 1; d <= last; d++) dates.push(d);
   const rows = [];
   for (let i = 0; i < dates.length; i += 7) rows.push(dates.slice(i, i + 7));
+
+  // --- 追加：クリック時の処理 ---
+  const handleDayClick = (dS: string, shiftsForDay: any[]) => {
+    if (!dS) return;
+    setSelectedDate(dS);
+    setDayDetails(shiftsForDay);
+  };
 
   return (
     <div style={{ padding: '20px', background: '#f0f2f5', minHeight: '100vh', fontFamily: 'sans-serif' }}>
@@ -85,7 +93,18 @@ export default function ViewPage() {
                     const dayShifts = shifts.filter(s => s.date === dS);
                     
                     return (
-                      <td key={ci} style={{ height: '100px', border: '1px solid #f0f0f0', verticalAlign: 'top', padding: '6px', background: d ? '#fff' : '#fafafa' }}>
+                      <td 
+                        key={ci} 
+                        onClick={() => dS && handleDayClick(dS, dayShifts)} // クリックイベント追加
+                        style={{ 
+                          height: '100px', 
+                          border: '1px solid #f0f0f0', 
+                          verticalAlign: 'top', 
+                          padding: '6px', 
+                          background: d ? '#fff' : '#fafafa',
+                          cursor: d ? 'pointer' : 'default' // 指マークにする
+                        }}
+                      >
                         <div style={{ fontSize: '0.85rem', marginBottom: '4px', color: '#888' }}>{d}</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                           {dayShifts.map(s => {
@@ -115,9 +134,45 @@ export default function ViewPage() {
           </table>
         )}
       </div>
+
+      {/* --- 追加：詳細表示用モーダル --- */}
+      {selectedDate && (
+        <div 
+          onClick={() => setSelectedDate(null)} // 背景クリックで閉じる
+          style={modalOverlay}
+        >
+          <div 
+            onClick={e => e.stopPropagation()} // 中身クリックでは閉じない
+            style={modalContent}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+              <h3 style={{ margin: 0 }}>{selectedDate} の詳細</h3>
+              <button onClick={() => setSelectedDate(null)} style={{ border: 'none', background: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {dayDetails.length > 0 ? dayDetails.map((s, i) => {
+                const style = getStaffColor(s.staff_name);
+                return (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: style.bg, borderRadius: '8px', borderLeft: `4px solid ${style.text}` }}>
+                    <span style={{ fontWeight: 'bold', color: style.text }}>{s.staff_name}</span>
+                    <span style={{ color: style.text }}>{s.start_time.slice(0, 5)} 〜</span>
+                  </div>
+                );
+              }) : (
+                <p style={{ textAlign: 'center', color: '#999' }}>予定はありません</p>
+              )}
+            </div>
+            <button onClick={() => setSelectedDate(null)} style={closeBtn}>閉じる</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
+// --- スタイル追加 ---
 const navBtn = { padding: '8px 16px', background: '#fff', border: '1px solid #dcdfe6', borderRadius: '8px', cursor: 'pointer', color: '#606266' };
 const backBtn = { marginBottom: '20px', padding: '10px 20px', borderRadius: '10px', border: 'none', background: '#fff', cursor: 'pointer', color: '#606266', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' };
+
+const modalOverlay: React.CSSProperties = {
+  position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
