@@ -176,3 +176,12 @@ const backBtn = { marginBottom: '20px', padding: '10px 20px', borderRadius: '10p
 
 const modalOverlay: React.CSSProperties = {
   position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+  background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+};
+const modalContent: React.CSSProperties = {
+  background: '#fff', padding: '20px', borderRadius: '15px', width: '90%', maxWidth: '400px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+};
+const closeBtn = {
+  marginTop: '20px', width: '100%', padding: '12px', border: 'none', borderRadius: '10px',
+  background: '#1a365d', color: '#fff', fontWeight: 'bold', cursor: 'pointer'
+};
