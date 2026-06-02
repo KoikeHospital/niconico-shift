@@ -21,6 +21,7 @@ export default function AttendancePage() {
   const [editing, setEditing] = useState(false);
   const [editClockIn, setEditClockIn] = useState('');
   const [editClockOut, setEditClockOut] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
 
@@ -101,7 +102,6 @@ export default function AttendancePage() {
 
   const handleDelete = async () => {
     if (!todayRecord) return;
-    if (!confirm('本日の打刻記録を削除しますか？')) return;
     setLoading(true);
     const { error } = await supabase.from('attendance').delete().eq('id', todayRecord.id);
     if (error) {
@@ -109,6 +109,7 @@ export default function AttendancePage() {
     } else {
       setMessage('打刻記録を削除しました。');
       setTodayRecord(null);
+      setConfirmDelete(false);
     }
     setLoading(false);
   };
@@ -240,7 +241,7 @@ export default function AttendancePage() {
         )}
 
         {/* 編集・削除エリア */}
-        {todayRecord && !editing && (
+        {todayRecord && !editing && !confirmDelete && (
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
             <button
               onClick={startEdit}
@@ -249,12 +250,33 @@ export default function AttendancePage() {
               ✏️ 打刻を修正
             </button>
             <button
-              onClick={handleDelete}
-              disabled={loading}
+              onClick={() => setConfirmDelete(true)}
               style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #ffa39e', background: '#fff1f0', color: '#cf1322', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
             >
               🗑 削除
             </button>
+          </div>
+        )}
+
+        {/* 削除確認UI */}
+        {confirmDelete && (
+          <div style={{ background: '#fff1f0', border: '1px solid #ffa39e', borderRadius: '12px', padding: '16px', marginBottom: '16px', textAlign: 'center' }}>
+            <p style={{ margin: '0 0 12px', fontWeight: 'bold', color: '#cf1322', fontSize: '0.95rem' }}>本日の打刻記録を削除しますか？</p>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={handleDelete}
+                disabled={loading}
+                style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#cf1322', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.95rem' }}
+              >
+                削除する
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #ddd', background: '#fff', color: '#555', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.95rem' }}
+              >
+                キャンセル
+              </button>
+            </div>
           </div>
         )}
 
