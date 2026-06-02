@@ -18,6 +18,9 @@ export default function AttendancePage() {
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [editClockIn, setEditClockIn] = useState('');
+  const [editClockOut, setEditClockOut] = useState('');
 
   const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
 
@@ -53,6 +56,59 @@ export default function AttendancePage() {
     } else {
       setMessage('出勤を記録しました！');
       await fetchTodayRecord(selectedName);
+    }
+    setLoading(false);
+  };
+
+  const toLocalTimeInput = (iso: string | null) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  };
+
+  const startEdit = () => {
+    if (!todayRecord) return;
+    setEditClockIn(toLocalTimeInput(todayRecord.clock_in));
+    setEditClockOut(toLocalTimeInput(todayRecord.clock_out));
+    setEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!todayRecord) return;
+    setLoading(true);
+    const toISO = (timeStr: string) => {
+      if (!timeStr) return null;
+      const [h, m] = timeStr.split(':').map(Number);
+      const d = new Date(todayRecord.date);
+      d.setHours(h, m, 0, 0);
+      return d.toISOString();
+    };
+    const { error } = await supabase
+      .from('attendance')
+      .update({ clock_in: toISO(editClockIn), clock_out: toISO(editClockOut) || null })
+      .eq('id', todayRecord.id);
+    if (error) {
+      alert('エラー: ' + error.message);
+    } else {
+      setMessage('打刻を修正しました。');
+      setEditing(false);
+      await fetchTodayRecord(selectedName);
+    }
+    setLoading(false);
+  };
+
+  const handleDelete = async () => {
+    if (!todayRecord) return;
+    if (!confirm('本日の打刻記録を削除しますか？')) return;
+    setLoading(true);
+    const { error } = await supabase.from('attendance').delete().eq('id', todayRecord.id);
+    if (error) {
+      alert('エラー: ' + error.message);
+    } else {
+      setMessage('打刻記録を削除しました。');
+      setTodayRecord(null);
     }
     setLoading(false);
   };
@@ -180,6 +236,67 @@ export default function AttendancePage() {
             >
               ■ 退勤
             </button>
+          </div>
+        )}
+
+        {/* 編集・削除エリア */}
+        {todayRecord && !editing && (
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <button
+              onClick={startEdit}
+              style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #faad14', background: '#fffbe6', color: '#d48806', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
+            >
+              ✏️ 打刻を修正
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={loading}
+              style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #ffa39e', background: '#fff1f0', color: '#cf1322', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
+            >
+              🗑 削除
+            </button>
+          </div>
+        )}
+
+        {/* 編集フォーム */}
+        {editing && (
+          <div style={{ background: '#fffbe6', border: '1px solid #faad14', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+            <p style={{ margin: '0 0 12px', fontWeight: 'bold', color: '#d48806', fontSize: '0.9rem' }}>打刻時刻を修正</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <label style={{ fontSize: '0.85rem', color: '#555' }}>
+                出勤時刻
+                <input
+                  type="time"
+                  value={editClockIn}
+                  onChange={e => setEditClockIn(e.target.value)}
+                  style={{ display: 'block', width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', marginTop: '4px' }}
+                />
+              </label>
+              <label style={{ fontSize: '0.85rem', color: '#555' }}>
+                退勤時刻（未退勤の場合は空欄）
+                <input
+                  type="time"
+                  value={editClockOut}
+                  onChange={e => setEditClockOut(e.target.value)}
+                  style={{ display: 'block', width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', marginTop: '4px' }}
+                />
+              </label>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              <button
+                onClick={handleSaveEdit}
+                disabled={loading}
+                style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#faad14', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
+              >
+                保存
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #ddd', background: '#fff', color: '#555', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
+              >
+                キャンセル
+              </button>
+            </div>
           </div>
         )}
 
