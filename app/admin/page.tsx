@@ -5,8 +5,6 @@ import { supabase } from '@/utils/supabase';
 export default function AdminPage() {
   const [shifts, setShifts] = useState<any[]>([]);
   const [load, setLoad] = useState(true);
-  const [pass, setPass] = useState(""); 
-  const [isAuth, setIsAuth] = useState(false); 
 
   const getS = async () => {
     const { data } = await supabase
@@ -19,20 +17,8 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (isAuth) {
-      getS();
-    }
-  }, [isAuth]);
-
-  const checkPass = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pass === "niconico") {
-      setIsAuth(true);
-    } else {
-      alert("パスワードが違います");
-      setPass("");
-    }
-  };
+    getS();
+  }, []);
 
   const approveShift = async (id: number) => {
     const { error } = await supabase
@@ -53,38 +39,15 @@ export default function AdminPage() {
     }
   };
 
-  if (!isAuth) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f0f2f5' }}>
-        <form onSubmit={checkPass} style={{ background: '#fff', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <h2 style={{ color: '#1a365d', marginBottom: '20px' }}>管理者ログイン</h2>
-          <input 
-            type="password" 
-            value={pass} 
-            onChange={(e) => setPass(e.target.value)} 
-            placeholder="パスワードを入力"
-            style={{ padding: '10px', width: '200px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '15px', display: 'block', marginLeft: 'auto', marginRight: 'auto', color: '#333' }}
-          />
-          <button type="submit" style={{ background: '#1a365d', color: '#fff', border: 'none', padding: '10px 30px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-            ログイン
-          </button>
-        </form>
-      </div>
-    );
-  }
-
   if (load) return <div style={{ padding: '20px' }}>読み込み中...</div>;
 
   return (
     <div style={{ padding: '20px', background: '#f0f2f5', minHeight: '100vh', fontFamily: 'sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <h2 style={{ color: '#1a365d', margin: 0 }}>シフト承認待ちリスト</h2>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <a href="/admin/report" style={{ background: '#217346', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', textDecoration: 'none' }}>📊 月次レポート</a>
-          <button onClick={() => setIsAuth(false)} style={{ background: '#ccc', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem', color: '#333' }}>ログアウト</button>
-        </div>
+        <a href="/admin/report" style={{ background: '#217346', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem', textDecoration: 'none' }}>📊 月次レポート</a>
       </div>
-      
+
       {shifts.length === 0 ? (
         <p style={{ color: '#666' }}>現在、承認待ちの申請はありません。</p>
       ) : (

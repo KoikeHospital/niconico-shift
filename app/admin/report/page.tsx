@@ -20,14 +20,6 @@ export default function ReportPage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pass, setPass] = useState('');
-  const [isAuth, setIsAuth] = useState(false);
-
-  const checkPass = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pass === 'niconico') setIsAuth(true);
-    else { alert('パスワードが違います'); setPass(''); }
-  };
 
   const fetchRecords = async () => {
     setLoading(true);
@@ -45,7 +37,7 @@ export default function ReportPage() {
     setLoading(false);
   };
 
-  useEffect(() => { if (isAuth) fetchRecords(); }, [isAuth, year, month]);
+  useEffect(() => { fetchRecords(); }, [year, month]);
 
   const formatTime = (iso: string | null) => {
     if (!iso) return '--:--';
@@ -74,7 +66,6 @@ export default function ReportPage() {
     const wb = XLSX.utils.book_new();
     const groups = groupByStaff();
 
-    // シート1: 全スタッフ一覧
     const allRows: (string | number)[][] = [
       [`${year}年${month}月 勤怠レポート`],
       [],
@@ -86,21 +77,12 @@ export default function ReportPage() {
         const d = new Date(r.date);
         const min = calcMinutes(r);
         allRows.push([
-          r.staff_name,
-          r.date,
-          weekdays[d.getDay()],
-          formatTime(r.clock_in),
-          formatTime(r.clock_out),
-          min ?? '',
-          formatHours(min),
+          r.staff_name, r.date, weekdays[d.getDay()],
+          formatTime(r.clock_in), formatTime(r.clock_out),
+          min ?? '', formatHours(min),
         ]);
       });
-      const totalMin = g.totalMin;
-      allRows.push([
-        `${g.name} 合計`, '', '', '', '',
-        totalMin,
-        formatHours(totalMin),
-      ]);
+      allRows.push([`${g.name} 合計`, '', '', '', '', g.totalMin, formatHours(g.totalMin)]);
       allRows.push([]);
     });
 
@@ -108,7 +90,6 @@ export default function ReportPage() {
     ws1['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 5 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws1, '全スタッフ');
 
-    // シート2: スタッフ別サマリー
     const summaryRows: (string | number)[][] = [
       [`${year}年${month}月 スタッフ別サマリー`],
       [],
@@ -124,34 +105,16 @@ export default function ReportPage() {
     XLSX.writeFile(wb, `勤怠レポート_${year}${String(month).padStart(2, '0')}.xlsx`);
   };
 
-  if (!isAuth) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f0f2f5' }}>
-        <form onSubmit={checkPass} style={{ background: '#fff', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-          <h2 style={{ color: '#1a365d', marginBottom: '20px' }}>管理者ログイン</h2>
-          <input type="password" value={pass} onChange={e => setPass(e.target.value)} placeholder="パスワードを入力"
-            style={{ padding: '10px', width: '200px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '15px', display: 'block', marginLeft: 'auto', marginRight: 'auto', color: '#333' }} />
-          <button type="submit" style={{ background: '#1a365d', color: '#fff', border: 'none', padding: '10px 30px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>ログイン</button>
-        </form>
-      </div>
-    );
-  }
-
   const groups = groupByStaff();
 
   return (
     <div style={{ padding: '20px', background: '#f0f2f5', minHeight: '100vh', fontFamily: 'sans-serif' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        {/* ヘッダー */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
           <h2 style={{ color: '#1a365d', margin: 0 }}>月次勤怠レポート</h2>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <Link href="/admin" style={{ color: '#666', fontSize: '0.85rem', textDecoration: 'none' }}>← 管理者トップ</Link>
-            <button onClick={() => setIsAuth(false)} style={{ background: '#ccc', border: 'none', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontSize: '0.8rem', color: '#333' }}>ログアウト</button>
-          </div>
+          <Link href="/admin" style={{ color: '#666', fontSize: '0.85rem', textDecoration: 'none' }}>← 管理者トップ</Link>
         </div>
 
-        {/* 月選択 & ダウンロード */}
         <div style={{ background: '#fff', borderRadius: '15px', padding: '20px', marginBottom: '20px', display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
           <select value={year} onChange={e => setYear(Number(e.target.value))}
             style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd', color: '#333', fontSize: '1rem' }}>
@@ -176,7 +139,6 @@ export default function ReportPage() {
           </div>
         )}
 
-        {/* スタッフ別テーブル */}
         {!loading && groups.map(g => (
           <div key={g.name} style={{ background: '#fff', borderRadius: '15px', marginBottom: '20px', overflow: 'hidden', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
             <div style={{ background: '#1a365d', color: '#fff', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
