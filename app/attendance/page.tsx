@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 
-const STAFF = ["池田 和也", "森 美妃", "岩崎 千久彩", "園田 清子", "檜木 万琳"];
+const STAFF = ["池田 和也", "森 美妃", "岩崎 千久彩", "園田 清子", "檜木 万琳", "冨田 梨菜", "山田 朋枝"];
 
 type AttendanceRecord = {
   id: number;
@@ -22,6 +22,14 @@ export default function AttendancePage() {
   const [editClockIn, setEditClockIn] = useState('');
   const [editClockOut, setEditClockOut] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const [showAddPast, setShowAddPast] = useState(false);
+  const [pastName, setPastName] = useState('');
+  const [pastDate, setPastDate] = useState('');
+  const [pastClockIn, setPastClockIn] = useState('');
+  const [pastClockOut, setPastClockOut] = useState('');
+  const [pastLoading, setPastLoading] = useState(false);
+  const [pastMessage, setPastMessage] = useState('');
 
   const today = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
 
@@ -142,6 +150,48 @@ export default function AttendancePage() {
     const h = Math.floor(diff / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
     return `${h}時間${m}分`;
+  };
+
+  const handleAddPast = async () => {
+    if (!pastName || !pastDate || !pastClockIn) {
+      setPastMessage('名前・日付・出勤時刻は必須です。');
+      return;
+    }
+    setPastLoading(true);
+    setPastMessage('');
+    const toISO = (dateStr: string, timeStr: string) => {
+      const [h, m] = timeStr.split(':').map(Number);
+      const d = new Date(dateStr);
+      d.setHours(h, m, 0, 0);
+      return d.toISOString();
+    };
+    const { data: existing } = await supabase
+      .from('attendance')
+      .select('id')
+      .eq('staff_name', pastName)
+      .eq('date', pastDate)
+      .maybeSingle();
+    if (existing) {
+      setPastMessage('その日付にはすでに記録があります。');
+      setPastLoading(false);
+      return;
+    }
+    const { error } = await supabase.from('attendance').insert([{
+      staff_name: pastName,
+      date: pastDate,
+      clock_in: toISO(pastDate, pastClockIn),
+      clock_out: pastClockOut ? toISO(pastDate, pastClockOut) : null,
+    }]);
+    if (error) {
+      setPastMessage('エラー: ' + error.message);
+    } else {
+      setPastMessage('記録を追加しました！');
+      setPastName('');
+      setPastDate('');
+      setPastClockIn('');
+      setPastClockOut('');
+    }
+    setPastLoading(false);
   };
 
   const getStatus = () => {
@@ -322,7 +372,70 @@ export default function AttendancePage() {
           </div>
         )}
 
-        <div style={{ textAlign: 'center' }}>
+        {/* 過去記録追加 */}
+        <div style={{ borderTop: '1px solid #eee', marginTop: '16px', paddingTop: '16px' }}>
+          <button
+            onClick={() => { setShowAddPast(v => !v); setPastMessage(''); }}
+            style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid #d9d9d9', background: '#fafafa', color: '#555', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}
+          >
+            {showAddPast ? '▲ 閉じる' : '＋ 打ち忘れ記録を追加'}
+          </button>
+
+          {showAddPast && (
+            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <select
+                value={pastName}
+                onChange={e => setPastName(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '10px', border: '1px solid #ddd', fontSize: '0.95rem', color: '#333', background: '#fafafa' }}
+              >
+                <option value="">▼ 名前を選択</option>
+                {STAFF.map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+              <label style={{ fontSize: '0.85rem', color: '#555' }}>
+                日付
+                <input
+                  type="date"
+                  value={pastDate}
+                  max={today}
+                  onChange={e => setPastDate(e.target.value)}
+                  style={{ display: 'block', width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', marginTop: '4px', boxSizing: 'border-box' }}
+                />
+              </label>
+              <label style={{ fontSize: '0.85rem', color: '#555' }}>
+                出勤時刻
+                <input
+                  type="time"
+                  value={pastClockIn}
+                  onChange={e => setPastClockIn(e.target.value)}
+                  style={{ display: 'block', width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', marginTop: '4px', boxSizing: 'border-box' }}
+                />
+              </label>
+              <label style={{ fontSize: '0.85rem', color: '#555' }}>
+                退勤時刻（未退勤の場合は空欄）
+                <input
+                  type="time"
+                  value={pastClockOut}
+                  onChange={e => setPastClockOut(e.target.value)}
+                  style={{ display: 'block', width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', marginTop: '4px', boxSizing: 'border-box' }}
+                />
+              </label>
+              {pastMessage && (
+                <div style={{ textAlign: 'center', color: pastMessage.startsWith('エラー') || pastMessage.includes('あります') ? '#cf1322' : '#389e0d', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                  {pastMessage}
+                </div>
+              )}
+              <button
+                onClick={handleAddPast}
+                disabled={pastLoading}
+                style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: '#faad14', color: '#fff', fontWeight: 'bold', cursor: 'pointer', fontSize: '1rem' }}
+              >
+                {pastLoading ? '追加中...' : '記録を追加'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '16px' }}>
           <Link href="/" style={{ color: '#aaa', fontSize: '0.85rem', textDecoration: 'none' }}>← メニューに戻る</Link>
         </div>
       </div>
