@@ -219,7 +219,8 @@ export default function ReportPage() {
               <span style={{ fontWeight: 'bold', fontSize: '1rem' }}>{g.name}</span>
               <span style={{ fontSize: '0.85rem' }}>出勤日数: {g.records.length}日 ／ 合計: {formatHours(g.totalMin)}</span>
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
               <thead>
                 <tr style={{ background: '#f7fafc' }}>
                   {['日付', '曜日', '出勤', '退勤', '勤務時間', '操作'].map(h => (
@@ -286,13 +287,13 @@ export default function ReportPage() {
                           <td style={{ padding: '10px 12px', color: '#2d3748', fontSize: '0.9rem' }}>{formatTime(r.clock_out)}</td>
                           <td style={{ padding: '10px 12px', color: min ? '#2d3748' : '#a0aec0', fontSize: '0.9rem', fontWeight: min ? 'bold' : 'normal' }}>{formatHours(min)}</td>
                           <td style={{ padding: '10px 12px' }}>
-                            <div style={{ display: 'flex', gap: '6px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               <button onClick={() => startEdit(r)}
-                                style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #faad14', background: '#fffbe6', color: '#d48806', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #faad14', background: '#fffbe6', color: '#d48806', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                 ✏️ 編集
                               </button>
                               <button onClick={() => setDeletingId(r.id)}
-                                style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #ffa39e', background: '#fff1f0', color: '#cf1322', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                style={{ padding: '5px 10px', borderRadius: '6px', border: '1px solid #ffa39e', background: '#fff1f0', color: '#cf1322', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                                 🗑 削除
                               </button>
                             </div>
@@ -311,6 +312,7 @@ export default function ReportPage() {
                 </tr>
               </tfoot>
             </table>
+            </div>
           </div>
         ))}
       </div>
