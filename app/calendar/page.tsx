@@ -8,6 +8,8 @@ export default function SimpleCalendar() {
   const [load, setLoad] = useState(true);
   const [sel, setSel] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', start: '09:00' });
+  const [edit, setEdit] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ start: '09:00', end: '17:00' });
 
   const Y = cur.getFullYear();
   const M = cur.getMonth();
@@ -46,6 +48,42 @@ export default function SimpleCalendar() {
     } else {
       alert("申請完了！管理者の承認をお待ちください。");
       setSel(null);
+      getS(Y, M);
+    }
+  };
+
+  // 既存シフトの編集を開く
+  const openEdit = (s: any) => {
+    setEdit(s);
+    setEditForm({
+      start: s.start_time ? s.start_time.slice(0, 5) : '09:00',
+      end: s.end_time ? s.end_time.slice(0, 5) : '17:00',
+    });
+  };
+
+  // 時間の修正を保存
+  const upd = async (e: any) => {
+    e.preventDefault();
+    const { error } = await supabase
+      .from('shifts')
+      .update({ start_time: editForm.start, end_time: editForm.end })
+      .eq('id', edit.id);
+    if (error) {
+      alert("エラー: " + error.message);
+    } else {
+      setEdit(null);
+      getS(Y, M);
+    }
+  };
+
+  // シフトの削除
+  const del = async () => {
+    if (!confirm("このシフトを削除しますか？")) return;
+    const { error } = await supabase.from('shifts').delete().eq('id', edit.id);
+    if (error) {
+      alert("エラー: " + error.message);
+    } else {
+      setEdit(null);
       getS(Y, M);
     }
   };
@@ -103,7 +141,7 @@ export default function SimpleCalendar() {
                           const lastName = s.staff_name ? s.staff_name.split(' ')[0] : '不明';
                           const startTime = s.start_time ? s.start_time.slice(0, 5) : '';
                           return (
-                            <div key={s.id} style={{ fontSize: '0.65rem', background: color[0], color: color[1], padding: '2px', borderRadius: '4px', border: `1px solid ${color[1]}44`, display: 'flex', justifyContent: 'center', gap: '3px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                            <div key={s.id} title="クリックして修正・削除" onClick={(e) => { e.stopPropagation(); openEdit(s); }} style={{ fontSize: '0.65rem', background: color[0], color: color[1], padding: '2px', borderRadius: '4px', border: `1px solid ${color[1]}44`, display: 'flex', justifyContent: 'center', gap: '3px', whiteSpace: 'nowrap', overflow: 'hidden', cursor: 'pointer' }}>
                               <span style={{ fontWeight: 'bold' }}>{lastName}</span>
                               <span>{startTime}</span>
                             </div>
@@ -140,6 +178,47 @@ export default function SimpleCalendar() {
               <button type="submit" style={{ flex: 1, padding: '12px', background: '#0070f3', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}>申請する</button>
               <button type="button" onClick={() => setSel(null)} style={{ flex: 1, padding: '12px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '8px' }}>戻る</button>
             </div>
+          </form>
+        </div>
+      )}
+
+      {edit && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <form onSubmit={upd} style={{ background: '#fff', padding: '25px', borderRadius: '15px', width: '300px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <h3 style={{ margin: 0, color: '#1a365d' }}>{edit.staff_name} の時間修正</h3>
+            <div style={{ fontSize: '0.85rem', color: '#666' }}>{edit.date ? edit.date.replace(/-/g, '/') : ''}</div>
+
+            <div>
+              <label style={{ fontSize: '0.8rem', color: '#333', display: 'block', marginBottom: '5px' }}>開始時間</label>
+              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                <select value={editForm.start.split(':')[0]} onChange={e => setEditForm({...editForm, start: `${e.target.value}:${editForm.start.split(':')[1] || '00'}`})} style={{ ...inputStyle, flex: 1 }}>
+                  {["07","08","09","10","11","12","13","14","15","16","17","18","19"].map(h => <option key={h} value={h}>{h}時</option>)}
+                </select>
+                <span style={{ color: '#333' }}>:</span>
+                <select value={editForm.start.split(':')[1] || '00'} onChange={e => setEditForm({...editForm, start: `${editForm.start.split(':')[0] || '09'}:${e.target.value}`})} style={{ ...inputStyle, flex: 1 }}>
+                  {["00", "15", "30", "45"].map(m => <option key={m} value={m}>{m}分</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.8rem', color: '#333', display: 'block', marginBottom: '5px' }}>終了時間</label>
+              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                <select value={editForm.end.split(':')[0]} onChange={e => setEditForm({...editForm, end: `${e.target.value}:${editForm.end.split(':')[1] || '00'}`})} style={{ ...inputStyle, flex: 1 }}>
+                  {["07","08","09","10","11","12","13","14","15","16","17","18","19","20","21"].map(h => <option key={h} value={h}>{h}時</option>)}
+                </select>
+                <span style={{ color: '#333' }}>:</span>
+                <select value={editForm.end.split(':')[1] || '00'} onChange={e => setEditForm({...editForm, end: `${editForm.end.split(':')[0] || '17'}:${e.target.value}`})} style={{ ...inputStyle, flex: 1 }}>
+                  {["00", "15", "30", "45"].map(m => <option key={m} value={m}>{m}分</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button type="submit" style={{ flex: 1, padding: '12px', background: '#0070f3', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}>保存する</button>
+              <button type="button" onClick={() => setEdit(null)} style={{ flex: 1, padding: '12px', background: '#f5f5f5', border: '1px solid #ddd', borderRadius: '8px' }}>戻る</button>
+            </div>
+            <button type="button" onClick={del} style={{ padding: '12px', background: '#fff', color: '#e53e3e', border: '1px solid #e53e3e', borderRadius: '8px', fontWeight: 'bold' }}>削除する</button>
           </form>
         </div>
       )}
