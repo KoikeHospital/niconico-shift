@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { supabase } from '@/utils/supabase';
 import * as XLSX from 'xlsx';
 
-const STAFF = ["池田 和也", "森 美妃", "岩崎 千久彩", "園田 清子", "檜木 万琳", "冨田 梨菜", "山田 朋枝"];
+const STAFF = ["池田 和也", "森 美妃", "岩崎 千久彩", "園田 清子", "檜木 万琳", "冨田 梨奈", "山田 朋枝"];
 
 type AttendanceRecord = {
   id: number;
