@@ -24,3 +24,55 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ───────────────────────────────────────────────
+   店前配置ツール（/haisha）用デザイントークン
+   niconico-shift から合流。変数名が独自なので既存と衝突しない。
+   参照: components/placement/*.module.css, app/haisha/page.module.css
+   ─────────────────────────────────────────────── */
+:root {
+  /* 表面・文字 */
+  --color-bg: oklch(97% 0.008 95);
+  --color-surface: oklch(99.5% 0.004 95);
+  --color-surface-sunken: oklch(94.5% 0.01 95);
+  --color-line: oklch(88% 0.012 95);
+  --color-text: oklch(24% 0.02 60);
+  --color-text-muted: oklch(52% 0.02 60);
+
+  /* 意味色：前列=teal（早い出庫）/ 後列=amber（遅い出庫） */
+  --color-front: oklch(64% 0.12 195);
+  --color-front-weak: oklch(94% 0.045 195);
+  --color-front-ink: oklch(35% 0.09 210);
+  --color-back: oklch(74% 0.13 75);
+  --color-back-weak: oklch(95% 0.05 80);
+  --color-back-ink: oklch(42% 0.11 60);
+
+  --color-empty: oklch(91% 0.008 95);
+  --color-danger: oklch(58% 0.18 25);
+  --color-danger-weak: oklch(95% 0.04 25);
+  --color-ok: oklch(60% 0.13 150);
+
+  /* タイポ（日本語スタックを --font-sans に割当） */
+  --font-sans: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic",
+    "Noto Sans JP", system-ui, sans-serif;
+  --font-mono: "SFMono-Regular", "Menlo", ui-monospace, monospace;
+  --text-hero: clamp(1.6rem, 1.1rem + 2vw, 2.5rem);
+  --text-lg: clamp(1.05rem, 0.98rem + 0.4vw, 1.25rem);
+
+  /* 間隔・形 */
+  --space-section: clamp(1.5rem, 1rem + 2vw, 2.75rem);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-card: 0 1px 2px oklch(24% 0.02 60 / 0.06),
+    0 8px 24px oklch(24% 0.02 60 / 0.06);
+
+  --duration-fast: 140ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 配置ツールのサブツリーだけ背景・日本語フォントを適用（既存ページには影響しない） */
+.placement-scope {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}

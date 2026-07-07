@@ -78,9 +78,24 @@ export default function HomePage() {
             </div>
           </Link>
 
+          {/* 4. 店前配置 */}
+          <Link href="/haisha" style={{ textDecoration: 'none' }}>
+            <div style={{
+              background: '#f9a825',
+              color: '#fff',
+              padding: '18px',
+              borderRadius: '15px',
+              fontWeight: 'bold',
+              fontSize: '1.1rem',
+              boxShadow: '0 4px 6px rgba(249, 168, 37, 0.25)'
+            }}>
+              🅿️ 店前の配置を決める
+            </div>
+          </Link>
+
           <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '10px 0' }} />
 
-          {/* 3. 管理者用 */}
+          {/* 5. 管理者用 */}
           <Link href="/admin" style={{ textDecoration: 'none' }}>
             <div style={{ 
               background: '#333', 
