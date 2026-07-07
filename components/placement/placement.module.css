@@ -545,6 +545,40 @@
   background: var(--color-bg);
 }
 
+/* ---- 印刷ボタン ---- */
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.printBtn {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background var(--duration-fast) var(--ease-out-expo),
+    border-color var(--duration-fast) var(--ease-out-expo);
+}
+.printBtn:hover {
+  background: var(--color-surface-sunken);
+  border-color: var(--color-front);
+}
+.printBtn:active {
+  transform: translateY(1px);
+}
+/* 画面では隠し、印刷時だけ出す見出し。 */
+.printCaption {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
 /* ---- responsive ---- */
 @media (max-width: 760px) {
   .inputGrid,
@@ -553,5 +587,16 @@
   }
   .saveGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---- 印刷時：横スクロール領域をクリップさせず、1ページに収める ---- */
+@media print {
+  .lanesScroll {
+    overflow: visible !important;
+  }
+  .lot,
+  .card {
+    break-inside: avoid;
   }
 }
