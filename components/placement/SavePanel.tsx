@@ -15,9 +15,11 @@ import styles from "./placement.module.css";
 
 type Props = {
   result: LayoutResult;
+  /** 保存・削除で保存ログが変わったとき、上部の「保存済みの配置」を取り直させる。 */
+  onSaved?: () => void;
 };
 
-export function SavePanel({ result }: Props) {
+export function SavePanel({ result, onSaved }: Props) {
   const [date, setDate] = useState(() => inferTargetDate(result));
   const [label, setLabel] = useState("");
   const [saving, setSaving] = useState(false);
@@ -57,6 +59,7 @@ export function SavePanel({ result }: Props) {
       setMessage("保存しました。");
       setLabel("");
       await loadLogs();
+      onSaved?.();
     }
     setSaving(false);
   };
@@ -70,6 +73,7 @@ export function SavePanel({ result }: Props) {
     }
     if (openId === id) setOpenId(null);
     await loadLogs();
+    onSaved?.();
   };
 
   return (

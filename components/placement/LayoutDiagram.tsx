@@ -1,25 +1,15 @@
 "use client";
 
+import { useRef } from "react";
 import { fmtTime } from "@/lib/format";
 import { lotConfig } from "@/lot.config";
 import type { Lane, StagedCar } from "@/lib/types";
+import { printCard } from "./print";
 import styles from "./placement.module.css";
 
 type Props = {
   lanes: Lane[];
 };
-
-/** 店前配置カードだけを印刷する。body にフラグを付け、@media print で対象以外を隠す。 */
-function printLayout(): void {
-  const body = document.body;
-  body.classList.add("printing-layout");
-  const cleanup = () => {
-    body.classList.remove("printing-layout");
-    window.removeEventListener("afterprint", cleanup);
-  };
-  window.addEventListener("afterprint", cleanup);
-  window.print();
-}
 
 function Cell({ car, row }: { car: StagedCar | null; row: "front" | "back" }) {
   if (!car) {
@@ -40,9 +30,11 @@ function Cell({ car, row }: { car: StagedCar | null; row: "front" | "back" }) {
 }
 
 export function LayoutDiagram({ lanes }: Props) {
+  const cardRef = useRef<HTMLElement>(null);
   return (
     <section
-      className={`${styles.card} printable-layout`}
+      ref={cardRef}
+      className={styles.card}
       aria-labelledby="diagram-heading"
     >
       <p className={`${styles.printCaption} print-only`}>
@@ -60,7 +52,7 @@ export function LayoutDiagram({ lanes }: Props) {
           <button
             type="button"
             className={`${styles.printBtn} no-print`}
-            onClick={printLayout}
+            onClick={() => printCard(cardRef.current)}
           >
             🖨 印刷
           </button>

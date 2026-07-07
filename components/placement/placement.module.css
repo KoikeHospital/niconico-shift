@@ -578,6 +578,12 @@
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
+/* 「保存済みの配置」カードの日付・メモ・保存時刻メタ。 */
+.currentMeta {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
 
 /* ---- responsive ---- */
 @media (max-width: 760px) {

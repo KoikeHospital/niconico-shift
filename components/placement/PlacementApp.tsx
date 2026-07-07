@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { parseReservations } from "@/lib/parse";
 import { decideLayout, indexReturns } from "@/lib/decideLayout";
 import type { LayoutResult } from "@/lib/types";
+import { CurrentLayout } from "./CurrentLayout";
 import { InputPanel } from "./InputPanel";
 import { ConfirmGrid } from "./ConfirmGrid";
 import { LayoutDiagram } from "./LayoutDiagram";
@@ -22,6 +23,8 @@ export function PlacementApp() {
   const [returnsText, setReturnsText] = useState("");
   const [rows, setRows] = useState<EditableDeparture[] | null>(null);
   const [result, setResult] = useState<LayoutResult | null>(null);
+  // 保存されるたびに増やし、上部の「保存済みの配置」を取り直させる。
+  const [savedToken, setSavedToken] = useState(0);
 
   // 帰着リストの索引。グリッドの在店バッジ表示に使う（計算前でも見える）。
   const returnsIndex = useMemo(
@@ -64,6 +67,8 @@ export function PlacementApp() {
 
   return (
     <div className={styles.app}>
+      <CurrentLayout reloadToken={savedToken} />
+
       <InputPanel
         departuresText={departuresText}
         returnsText={returnsText}
@@ -93,7 +98,10 @@ export function PlacementApp() {
             overflow={result.overflow}
             warnings={result.warnings}
           />
-          <SavePanel result={result} />
+          <SavePanel
+            result={result}
+            onSaved={() => setSavedToken((t) => t + 1)}
+          />
         </div>
       )}
     </div>

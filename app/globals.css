@@ -82,21 +82,20 @@ body {
   display: none;
 }
 
-/* 「🖨 印刷」ボタンで body.printing-layout を付けたときだけ、
-   店前配置カード(.printable-layout)以外を隠して1枚に印刷する。
-   通常の Cmd+P（フラグ無し）はページ全体をそのまま印刷。 */
+/* 「🖨 印刷」ボタンで body.printing-layout ＋ 対象カードに .printing-target を付けたときだけ、
+   その1枚以外を隠して印刷する。通常の Cmd+P（フラグ無し）はページ全体をそのまま印刷。 */
 @media print {
   body.printing-layout * {
     visibility: hidden;
   }
-  body.printing-layout .printable-layout,
-  body.printing-layout .printable-layout * {
+  body.printing-layout .printing-target,
+  body.printing-layout .printing-target * {
     visibility: visible;
     /* 前列=teal / 後列=amber の色は意味を持つので背景色を確実に印刷する */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  body.printing-layout .printable-layout {
+  body.printing-layout .printing-target {
     position: absolute;
     left: 0;
     top: 0;
@@ -105,7 +104,7 @@ body {
     border: none;
     box-shadow: none;
   }
-  body.printing-layout .print-only {
+  body.printing-layout .printing-target .print-only {
     display: block;
   }
   .no-print {
